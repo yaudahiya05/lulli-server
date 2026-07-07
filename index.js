@@ -337,7 +337,7 @@ app.post('/api/channel/react', antiSpamMiddleware, async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 2700;
+const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Dashboard berjalan di port ${PORT}`);
 });
