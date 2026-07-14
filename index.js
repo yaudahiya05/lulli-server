@@ -1,13 +1,59 @@
-// server.js
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import mqtt from 'mqtt';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+const unhandledRejections = new Map();
+process.on('unhandledRejection', (reason, promise) => {
+    unhandledRejections.set(promise, reason);
+    console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+process.on('rejectionHandled', (promise) => {
+    unhandledRejections.delete(promise);
+});
+process.on('uncaughtException', function(err) {
+    console.log('Caught exception: ', err);
+});
+
+// Tambahkan flag untuk mencegah proses berjalan dobel
+let isRunning = false;
+
+function start() {
+    if (isRunning) return;
+    isRunning = true;
+
+    let args = [path.join(__dirname, 'main.js'), ...process.argv.slice(2)];
+    let p = spawn(process.argv[0], args, {
+        stdio: ['inherit', 'inherit', 'inherit', 'ipc']
+    });
+
+    p.on('message', data => {
+        if (data === 'reset') {
+            console.log('Restarting by request...');
+            p.kill(); 
+        }
+    });
+
+    p.on('exit', code => {
+        console.error('Process exited with code:', code);
+        isRunning = false;
+
+        // Kasih jeda 1 detik sebelum restart supaya CPU gak jebol kalau error beruntun
+        setTimeout(() => {
+            start();
+        }, 1000);
+    });
+}
+
+start();
+
+// SERVER & DASHBOARD SECTION
 const app = express();
 const httpServer = createServer(app);
 
@@ -70,7 +116,8 @@ function checkRateLimit(ip) {
 }
 
 function antiSpamMiddleware(req, res, next) {
-    const ip = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+    // Penanganan IP Replit yang berada di balik proxy (x-forwarded-for) sudah benar
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress || 'unknown';
 
     if (isBlocked(ip)) {
         return res.status(429).json({ success: false, error: "IP diblokir sementara." });
