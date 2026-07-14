@@ -1,0 +1,1 @@
+const s=new class{constructor(){this.processedMessages=new Set}};export const processedMessages=s.processedMessages;export default s;
