@@ -1,19 +1,12 @@
 {
-  "name": "wabot-ai",
+  "name": "lullibot-server",
   "version": "1.0.0",
-  "description": "Bot ini Dirancang dan Dikembangkan Oleh SuryaDev.",
-  "main": "index.js",
+  "description": "WhatsApp Dashboard (Premium)",
   "type": "module",
+  "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "start2": "pm2 start main.js && pm2 save && pm2 logs"
+    "start": "node index.js"
   },
-  "directories": {
-    "system": "system",
-    "temp": "temp"
-  },
-  "author": "SuryaDev",
-  "license": "ISC",
   "dependencies": {
     "@whiskeysockets/baileys": "npm:@whiskeysockets/baileys@7.0.0-rc13",
     "awesome-phonenumber": "^2.64.0",
